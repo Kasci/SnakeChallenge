@@ -14,7 +14,7 @@ public class Game {
     private boolean running;
 
     private Snake snake;
-    public Point food;
+    private Point food;
     public Game(Screen screen) {
         this.screen = screen;
         snake = new Snake();
@@ -35,7 +35,6 @@ public class Game {
         while (running) {
             render();
             Direction d = input();
-            System.out.println(d);
             if (d != Direction.NONE) dir = d;
             Instant now = Instant.now();
             if (now.toEpochMilli() - begin.toEpochMilli() > 300) {
@@ -46,11 +45,11 @@ public class Game {
     }
 
     private void update(Direction dir) {
-        Point p = snake.snake.peekFirst().clone();
+        Point p = snake.peekHead().clone();
         if (dir != Direction.NONE) {
-            snake.dir = dir;
+            snake.setDir(dir);
         }
-        switch (snake.dir) {
+        switch (snake.getDir()) {
             case UP: p.y--; break;
             case DOWN: p.y++; break;
             case LEFT: p.x--; break;
@@ -58,13 +57,13 @@ public class Game {
         }
         p.x =(p.x+WIDTH)%WIDTH;
         p.y =(p.y+HEIGHT)%HEIGHT;
-        snake.snake.addFirst(p);
+        snake.addHead(p);
         if (snake.isOn(food)) {
             food = new Point();
         } else {
-            snake.snake.removeLast();
+            snake.removeTail();
         }
-        if (snake.snake.stream().skip(1).anyMatch(it -> snake.isOn(it))) {
+        if (snake.doesColidesWithItself()) {
             this.running = false;
         }
     }
@@ -87,7 +86,7 @@ public class Game {
         this.screen.clear();
         TextGraphics g = this.screen.newTextGraphics();
         g.setCharacter(food.x, food.y, 'o');
-        for (Point p: snake.snake) {
+        for (Point p: snake.getSnake()) {
             g.setCharacter(p.x, p.y, 'X');
         }
         this.screen.refresh(Screen.RefreshType.DELTA);
